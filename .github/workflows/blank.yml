@@ -42,7 +42,7 @@ jobs:
             # ===== 3. 最后一次提交后不用等 =====
             if [ "$i" -lt "$COUNT" ]; then
               # 随机等待 60 ~ 600 秒（1 ~ 10 分钟）
-              WAIT=$((RANDOM % 541 + 60))
+              WAIT=$((RANDOM % 31 + 30))
               echo ">>> 等待 $WAIT 秒后进行下一次提交"
               sleep $WAIT
             fi
