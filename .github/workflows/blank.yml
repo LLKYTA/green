@@ -5,7 +5,8 @@ on:
     branches:
       - main
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 * * *"   # 每天 00:00 UTC 触发（北京时间 08:00）
+  workflow_dispatch:       # 允许手动触发，方便测试
 
 jobs:
   autogreen:
@@ -19,6 +20,32 @@ jobs:
           git config --local user.email "lys010107@163.com"
           git config --local user.name "LLKYTA"
           git remote set-url origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git pull --rebase
-          git commit --allow-empty -m "a commit a day keeps your girlfriend away"
-          git push
+
+          # ===== 1. 随机决定今天是否跳过 =====
+          # 1/10 的概率今天不提交
+          if [ $((RANDOM % 10)) -eq 0 ]; then
+            echo ">>> 今天休息，不提交"
+            exit 0
+          fi
+
+          # ===== 2. 随机决定今天提交几次（5 ~ 30 次）=====
+          COUNT=$((RANDOM % 26 + 5))
+          echo ">>> 今天计划提交 $COUNT 次"
+
+          for i in $(seq 1 $COUNT); do
+            echo "----- 第 $i / $COUNT 次提交 -----"
+
+            git pull --rebase
+            git commit --allow-empty -m "a commit a day keeps your girlfriend away"
+            git push
+
+            # ===== 3. 最后一次提交后不用等 =====
+            if [ "$i" -lt "$COUNT" ]; then
+              # 随机等待 60 ~ 600 秒（1 ~ 10 分钟）
+              WAIT=$((RANDOM % 541 + 60))
+              echo ">>> 等待 $WAIT 秒后进行下一次提交"
+              sleep $WAIT
+            fi
+          done
+
+          echo ">>> 今天的任务完成，共提交 $COUNT 次"
